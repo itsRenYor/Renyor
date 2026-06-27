@@ -1,0 +1,137 @@
+{
+  "theme_and_archetype": {
+    "domain": "Finance, Accounting, Taxation, ERP for Indian MSMEs",
+    "theme": "Light + Dark Mode (Toggle Required)",
+    "archetype": "Archetype 4 (Swiss & High-Contrast) infused with Indian Fintech Trust",
+    "rationale": "A highly functional, precise, and authoritative design. It replaces chaotic handwritten ledgers with clear, high-contrast digital truth. Avoiding purple gradients; instead relying on Deep Emerald (growth/money) and crisp Obsidian/White for maximum data density without clutter."
+  },
+  "typography": {
+    "primary_font_headings": "Outfit",
+    "secondary_font_body": "IBM Plex Sans",
+    "mono_font_data": "JetBrains Mono",
+    "font_weights": {
+      "headings": [500, 600, 700],
+      "body": [400, 500],
+      "data": [400, 500, 700]
+    },
+    "scale_rules": {
+      "h1": "text-4xl sm:text-5xl tracking-tight leading-none",
+      "h2": "text-2xl sm:text-3xl tracking-tight",
+      "h3": "text-xl font-medium",
+      "h4": "text-lg font-medium",
+      "body": "text-sm sm:text-base leading-relaxed",
+      "data_tables": "text-sm font-mono tracking-tight",
+      "labels_overlines": "text-xs font-semibold tracking-wider uppercase"
+    },
+    "notes": "JetBrains Mono MUST be used for all financial figures (amounts, GSTINs, PAN numbers, inventory counts) to ensure tabular alignment and numerical clarity."
+  },
+  "colors": {
+    "light_mode": {
+      "background": "#FAFAFA",
+      "surface": "#FFFFFF",
+      "surface_hover": "#F4F4F5",
+      "border": "#E4E4E7",
+      "text_primary": "#09090B",
+      "text_secondary": "#71717A",
+      "brand_primary": "#0A5C36",
+      "brand_primary_hover": "#042F1C",
+      "accent_terracotta": "#E25822",
+      "success": "#16A34A",
+      "warning": "#EAB308",
+      "danger": "#DC2626"
+    },
+    "dark_mode": {
+      "background": "#09090B",
+      "surface": "#18181B",
+      "surface_hover": "#27272A",
+      "border": "#27272A",
+      "text_primary": "#FAFAFA",
+      "text_secondary": "#A1A1AA",
+      "brand_primary": "#10B981",
+      "brand_primary_hover": "#34D399",
+      "accent_terracotta": "#F97316",
+      "success": "#22C55E",
+      "warning": "#FACC15",
+      "danger": "#EF4444"
+    },
+    "rules": {
+      "primary_usage": "Use Emerald/Green variants ONLY for primary CTAs, positive financial balances, and active states. Do NOT overuse.",
+      "accent_usage": "Use Terracotta/Orange for outstanding payables, low-stock alerts, and secondary actionable highlights.",
+      "neutral_tint": "Greys must be slightly tinted with cool blue (Zinc scale) to feel precise and financial."
+    }
+  },
+  "spacing_and_layout": {
+    "grid_system": "The 'Control Room' Grid",
+    "dashboard_grid": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6",
+    "kpi_cards": "col-span-1",
+    "chart_sections": "col-span-2 row-span-2 lg:col-span-3",
+    "dense_lists": "col-span-1 row-span-2",
+    "padding_scale": {
+      "containers": "p-6 md:p-8",
+      "cards": "p-4 md:p-6",
+      "dense_cells": "px-3 py-2"
+    },
+    "alignment": "Financial figures right-aligned. Labels left-aligned. Center alignment is BANNED except for empty states or explicit modals."
+  },
+  "surface_strategies": {
+    "dashboard_cards": "Flat solid surfaces. 1px solid border (border-border). Max border-radius: rounded-lg. No heavy shadows, use shadow-sm on hover.",
+    "glassmorphism": "Restricted to sticky headers and modal overlays. High opacity (bg-white/80 or bg-black/80) with backdrop-blur-xl and 1px inner border.",
+    "tables": "Zebra striping on dense financial ledgers (bg-transparent odd:bg-surface-hover/50) to aid scanning."
+  },
+  "motion_and_interactions": {
+    "kpi_card_reveal": "Staggered entrance: opacity 0 to 1, translateY 10px to 0px, duration 0.3s, stagger 0.05s.",
+    "tabular_data_hover": "Row hover highlight: background shifts to subtle gray/zinc tint, left border highlight (inset box-shadow 3px 0 0 brand_primary) to anchor the eye across wide tables.",
+    "sidebar_expand": "Smooth width transition (w-16 to w-64) via framer-motion layout animation. Icons remain static, labels fade in (opacity 0 to 1, delay 0.1s).",
+    "button_click": "Scale down to 0.97, swift recovery. Hover state must explicitly define higher contrast background and text."
+  },
+  "components_guidelines": {
+    "buttons": "Sharp corners (rounded-md). High contrast. No gradients.",
+    "navigation": "Sidebar for dashboard, top sticky nav for marketing page.",
+    "forms": "Use Shadcn inputs. Labels must be bold. Input focus state must be a sharp 2px ring of brand_primary (ring-2 ring-brand ring-offset-1).",
+    "charts": "Recharts. Use monochromatic fills with brand accents. Tooltips must have dark background and crisp white text. Remove grid lines except horizontal base lines."
+  },
+  "iconography": {
+    "library": "@phosphor-icons/react",
+    "installation": "yarn add @phosphor-icons/react",
+    "style": "Duotone weight for marketing, Regular weight for dense dashboard interfaces."
+  },
+  "image_assets": {
+    "hero_and_marketing": [
+      {
+        "url": "https://images.unsplash.com/photo-1740989804341-f54be7334e81?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2Mzl8MHwxfHNlYXJjaHwzfHxpbmRpYW4lMjBzaG9wJTIwb3duZXIlMjBtb2Rlcm58ZW58MHx8fHwxNzgyNTkyNjIzfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Indian shop owner standing proudly, representing MSME target audience.",
+        "placement": "Marketing landing page feature section or about section."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1560221328-12fe60f83ab8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzl8MHwxfHNlYXJjaHwyfHxmaW5hbmNpYWwlMjBncmFwaCUyMGFic3RyYWN0fGVufDB8fHx8MTc4MjU5MjYyM3ww&ixlib=rb-4.1.0&q=85",
+        "description": "Close-up of financial graphs and charts.",
+        "placement": "Hero section background image (with heavy dark/glass overlay) or dashboard illustration."
+      }
+    ],
+    "avatars_and_testimonials": [
+      {
+        "url": "https://images.unsplash.com/photo-1589386417686-0d34b5903d23?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBidXNpbmVzcyUyMHBvcnRyYWl0fGVufDB8fHx8MTc4MjU5MjYyNHww&ixlib=rb-4.1.0&q=85",
+        "description": "Smiling Indian businessman portrait.",
+        "placement": "Testimonial avatar 1 (e.g., CA or large distributor)."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1762341124796-530c0085f7d8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDF8MHwxfHNlYXJjaHwyfHxpbmRpYW4lMjBidXNpbmVzcyUyMHBvcnRyYWl0fGVufDB8fHx8MTc4MjU5MjYyNHww&ixlib=rb-4.1.0&q=85",
+        "description": "Professional Indian businesswoman portrait.",
+        "placement": "Testimonial avatar 2 (e.g., Retail store owner)."
+      },
+      {
+        "url": "https://images.pexels.com/photos/7580766/pexels-photo-7580766.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Confident business professional in suit.",
+        "placement": "Testimonial avatar 3 or 'Contact Sales' representative."
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "CRITICAL: Do NOT use standard Inter/Roboto. You MUST import and use Outfit (Headings), IBM Plex Sans (Body), and JetBrains Mono (Data).",
+    "CRITICAL: All financial data, tables, invoice amounts, and GSTIN numbers MUST use JetBrains Mono (font-mono).",
+    "CRITICAL: Include data-testid attributes on all interactive elements (buttons, inputs, links, tabs) for testing.",
+    "CRITICAL: Ensure both light and dark modes are fully supported. Avoid arbitrary hex colors in components; strictly rely on the configured Tailwind semantic variables.",
+    "CRITICAL: Never use placeholder images. Use ONLY the URLs provided in the image_assets section.",
+    "CRITICAL: Format Indian Currency correctly (₹). Use appropriate commas (e.g., 1,50,000 not 150,000)."
+  ]
+}
