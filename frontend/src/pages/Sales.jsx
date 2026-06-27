@@ -44,9 +44,10 @@ function InvoiceForm({ onClose, onCreated }) {
     shipping: 0,
     paid_amount: 0,
     payment_mode: "credit",
-    items: [{ product_id: "", name: "", hsn_code: "", quantity: 1, unit: "PCS", rate: 0, discount_pct: 0, gst_rate: 18 }],
+    items: [{ _key: 1, product_id: "", name: "", hsn_code: "", quantity: 1, unit: "PCS", rate: 0, discount_pct: 0, gst_rate: 18 }],
   });
   const [saving, setSaving] = useState(false);
+  const [nextKey, setNextKey] = useState(2);
 
   useEffect(() => {
     api.get("/masters/parties?party_type=customer").then(({ data }) => setCustomers(data));
@@ -72,7 +73,7 @@ function InvoiceForm({ onClose, onCreated }) {
     setForm({ ...form, items });
   };
 
-  const addItem = () => setForm({ ...form, items: [...form.items, { product_id: "", name: "", hsn_code: "", quantity: 1, unit: "PCS", rate: 0, discount_pct: 0, gst_rate: 18 }] });
+  const addItem = () => { setForm({ ...form, items: [...form.items, { _key: nextKey, product_id: "", name: "", hsn_code: "", quantity: 1, unit: "PCS", rate: 0, discount_pct: 0, gst_rate: 18 }] }); setNextKey(nextKey + 1); };
   const removeItem = (i) => setForm({ ...form, items: form.items.filter((_, idx) => idx !== i) });
 
   const totals = useMemo(() => {
@@ -168,7 +169,7 @@ function InvoiceForm({ onClose, onCreated }) {
                 const net = amt - disc;
                 const g = net * ((parseFloat(it.gst_rate) || 0) / 100);
                 return (
-                  <TableRow key={i}>
+                  <TableRow key={it._key ?? `row-${i}`}>
                     <TableCell>
                       <Select value={it.product_id} onValueChange={(v) => selectProduct(i, v)}>
                         <SelectTrigger className="h-8" data-testid={`invoice-item-product-${i}`}><SelectValue placeholder="Product (optional)" /></SelectTrigger>

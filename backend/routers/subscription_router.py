@@ -116,8 +116,13 @@ async def create_order(body: CreateOrderIn, user=Depends(get_current_user)):
                 },
             }
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(500, f"Razorpay error: {str(e)}")
+
+    if not order or "id" not in order:
+        raise HTTPException(500, "Razorpay did not return an order id")
 
     await db.subscription_orders.insert_one(
         {
