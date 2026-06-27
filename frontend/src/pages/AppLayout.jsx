@@ -114,7 +114,7 @@ export default function AppLayout() {
             <span className="font-mono">{new Date().toLocaleDateString("en-IN", { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' })}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={toggle} data-testid="app-theme-toggle">
+            <Button variant="ghost" size="icon" onClick={toggle} data-testid="theme-toggle">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <DropdownMenu>
@@ -140,7 +140,7 @@ export default function AppLayout() {
                   <Building2 className="h-4 w-4 mr-2" /> Company Profile
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} data-testid="user-menu-logout" className="text-destructive">
+                <DropdownMenuItem onClick={logout} data-testid="logout-button" className="text-destructive">
                   <LogOut className="h-4 w-4 mr-2" /> Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
