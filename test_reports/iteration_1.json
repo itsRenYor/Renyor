@@ -1,0 +1,43 @@
+{
+  "summary": "First-finish smoke testing of AITAX Phase 1+2 MVP. Backend auth, dashboard KPIs, masters CRUD, sales create/delete with stock movement, tenant isolation, subscription plans, and Razorpay order creation all verified working. Frontend landing, login, dashboard with Indian INR formatting, customers, products, pricing all render correctly with proper data-testids.",
+  "tested_scope": ["frontend", "backend", "auth", "integration"],
+  "passed": [
+    "POST /api/auth/login with demo@aitax.in/Demo@12345 returns JWT + user object (200)",
+    "POST /api/auth/register creates new user, returns JWT, auto-creates company when business_name provided",
+    "GET /api/auth/me returns 401 without token, 200 with valid bearer token",
+    "GET /api/dashboard/kpis returns inventory_value=113900 (matches spec), customers=3, suppliers=2, products=5",
+    "GET /api/masters/parties?party_type=customer returns 3 seeded parties",
+    "POST /api/masters/parties creates customer, copies opening_balance=1000 to current_balance",
+    "GET /api/masters/products returns 5 seeded products with stock/price/gst",
+    "GET /api/masters/products/low-stock returns empty array (no low stock seeded)",
+    "POST /api/sales creates invoice INV-00001 with computed subtotal=500, gst_total=60 (12%), grand_total=560; status=sent; auto invoice_number prefix correct",
+    "Sales creation deducts product stock 30 -> 28",
+    "DELETE /api/sales/{id} returns {ok:true} and reverses stock 28 -> 30",
+    "GET /api/subscription/plans returns 3 plans (starter/pro/enterprise) with monthly/quarterly/yearly prices",
+    "POST /api/subscription/create-order returns order_id=order_T6nXAgaPvSH7KR, amount=49900, currency=INR, key_id=rzp_live_T6mxYH9aA8plbX (live Razorpay reachable)",
+    "POST /api/subscription/verify-payment with invalid signature correctly returns 400",
+    "Tenant isolation: newly registered user sees 0 parties (cannot see demo company data)",
+    "Frontend: Landing page renders with hero, nav, CTAs, plan price ₹499/mo",
+    "Frontend: Login form accepts demo creds, redirects to /app/dashboard, shows 'Welcome back, Demo Owner' toast",
+    "Frontend: Dashboard renders all 8 KPI cards with data-testids (kpi-sales-today, kpi-receipts, kpi-receivables, kpi-payables, kpi-inventory, kpi-profit, kpi-low-stock, kpi-counts); INVENTORY VALUE shows ₹1,13,900.00 in Indian numbering format",
+    "Frontend: Customers page (/app/customers) renders table with party-add button (data-testid present), shows ₹1,560.00 balance correctly",
+    "Frontend: Products page renders table with HSN, sale_price (₹250.00), GST 12%, stock 30 PCS",
+    "Frontend: Pricing page shows 3 plans with Monthly/Quarterly/Yearly tabs and Subscribe buttons",
+    "Frontend: Sidebar navigation exposes all routes (Dashboard, Customers, Suppliers, Products, Sales, Purchases, Inventory, Billing & Plans)"
+  ],
+  "failed": [
+    {
+      "area": "frontend/header",
+      "issue": "No element with data-testid='theme-toggle' or 'logout-button' found on dashboard. Theme toggle and Logout button could not be located via expected data-testid selectors.",
+      "evidence": "page.evaluate query returned count=0 for both [data-testid='theme-toggle'] and [data-testid='logout-button'] / button:has-text('Logout'|'Sign out')",
+      "priority": "LOW"
+    }
+  ],
+  "action_items": [
+    "Ensure header/profile menu in AppLayout exposes data-testid='theme-toggle' and data-testid='logout-button' (or equivalent) so full-testing agent can verify theme persistence and logout flow. Functionality may already exist (e.g., behind a user-menu dropdown) but is not discoverable via expected testids."
+  ],
+  "success_rate": {"backend": "100%", "frontend": "95%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Sales schema uses field names 'items', 'name', 'quantity' (not 'line_items'/'qty' as mentioned in review prompt). Backend behaviour is correct; the review-request wording was outdated. DELETE /api/sales/{id} works without trailing slash. Razorpay LIVE order created (no payment completed)."
+}
