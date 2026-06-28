@@ -1,0 +1,67 @@
+{
+  "summary": "Iteration 3 (Super Admin, Change Password, Google Auth, RBAC) — FULLY PASSED. Backend: 19/19 new pytest cases green + 16/16 iteration_2 regression still green = 35/35. Frontend: every flow verified end-to-end on the live preview URL (login-google + register-google buttons present, super-admin-info@aitax.com routes to /admin, AdminDashboard renders 7 stat cards with INR formatting + tenant table with reset/toggle buttons, reset-password dialog actually changes pw via API, toggle Deactivate→Activate flips the label, Subscriptions tab renders, tenant demo redirected to /app/dashboard, AdminRoute guard kicks tenant out of /admin → /app/dashboard, /app/profile shows Account card + 3 password fields + submit, user-menu has Profile & Password item, /auth/callback#session_id=invalid_test → backend 401 → toast + redirect to /login, profile mismatched-confirm shows error, valid current+new succeeds with toast).",
+  "tested_scope": ["backend", "frontend", "auth", "rbac", "integration", "regression"],
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "feature_verification": {
+    "super_admin_login_flags": "PASS — is_super_admin=true, role='super_admin', auth_provider='password'",
+    "super_admin_idempotent_seed": "PASS — repeatable logins succeed across restart-equivalent calls",
+    "change_password_self_service": "PASS — success path + wrong current (400) + too short (400) all behave correctly; backend re-login with new pw succeeds, old pw fails",
+    "admin_stats_rbac": "PASS — 403 for tenant, 200 for super admin with all 7 fields (total_users, active_users, total_companies, paid_subscribers, total_invoices, mrr_estimate, platform_revenue_total)",
+    "admin_users_list": "PASS — super admin excluded; ?search=demo returns demo@aitax.in; 403 for tenant",
+    "admin_force_reset_password": "PASS — super admin resets tenant pw; tenant re-logins with new pw; old pw fails; cannot target super admin (non-existent id → 404; query excludes is_super_admin:true)",
+    "admin_toggle_active": "PASS — deactivate makes login 403 'Account is deactivated'; reactivate restores login; UI label flips Deactivate↔Activate",
+    "google_exchange_empty": "PASS — 400/422",
+    "google_exchange_garbage": "PASS — 401 (Emergent endpoint rejects)",
+    "google_exchange_super_admin_block": "VERIFIED IN CODE at /app/backend/routers/auth_router.py:152-153 (cannot test live without a real Google session that owns info@aitax.com)",
+    "login_google_button_ui": "PASS — [data-testid='login-google'] above email form with 'or' separator",
+    "register_google_button_ui": "PASS — [data-testid='register-google'] present",
+    "super_admin_login_redirects_to_admin": "PASS — /login → /admin (not /app/dashboard)",
+    "admin_dashboard_renders": "PASS — 'AITAX Admin / Platform Console' header, red shield icon, 'Super Admin' destructive badge, 7 stat cards (TOTAL TENANTS, PAID SUBSCRIBERS, BUSINESSES, INVOICES CREATED, MRR, LIFETIME REVENUE, ACTIVE ACCOUNTS) with ₹ formatting, tenants table with Auth/Plan/Status badges + Reset + Deactivate buttons",
+    "admin_reset_dialog": "PASS — clicking admin-reset-{userId} opens dialog; filling input + admin-reset-submit fires API and shows success toast",
+    "admin_toggle_ui": "PASS — admin-toggle-{userId} flips button label Deactivate ↔ Activate",
+    "admin_subscriptions_tab": "PASS — clicks tab, renders subscription orders area",
+    "tenant_login_redirects_to_dashboard": "PASS — demo@aitax.in → /app/dashboard (not /admin)",
+    "admin_route_guard_blocks_tenant": "PASS — tenant visiting /admin redirected to /app/dashboard",
+    "profile_page_account_card_and_form": "PASS — Email/Full name/Role/Sign-in method (Email & Password badge) visible; all 4 data-testids present (profile-current-password, profile-new-password, profile-confirm-password, profile-change-password-submit)",
+    "profile_mismatch_confirm_error": "PASS — mismatched confirm produces visible error",
+    "profile_change_password_success": "PASS — valid current+new+confirm fires API, toast 'Password changed successfully' visible (verified in screenshot)",
+    "user_menu_profile_link": "PASS — [data-testid='user-menu-profile'] inside dropdown",
+    "google_callback_invalid_session": "PASS — /auth/callback#session_id=invalid_test → backend 401 → redirect to /login"
+  },
+  "regression_results": {
+    "auth_login_and_me": "PASS",
+    "dashboard_kpis": "PASS (structure ok; small inventory_value drift carried over from iteration 2 — known/documented, not a regression)",
+    "masters_crud_smoke": "PASS",
+    "sales_create_delete_stock_reversal": "PASS",
+    "subscription_create_order": "PASS (starter/pro/enterprise + invalid plan + invalid cycle)",
+    "subscription_verify_payment_signature": "PASS",
+    "tenant_isolation": "PASS"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration3_admin_auth.py",
+    "/app/backend/tests/test_aitax_regression.py",
+    "/app/test_reports/pytest/iteration_3.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "admin_router.require_super_admin Depends is correctly applied to every endpoint; query for reset-password/toggle-active uses {is_super_admin:{$ne:true}} so even a malicious id targeting the super admin returns 404. Solid.",
+    "auth_router.google_exchange: super-admin email block lives BEFORE upsert (line ~152), so it's impossible to create a Google-provisioned super admin row. Good defensive ordering.",
+    "auth_router.login: deactivated check returns 403 'Account is deactivated' AFTER password verify, which is correct (does not leak existence to attackers without the correct password).",
+    "server._seed_super_admin: idempotent and refreshes password_hash + role + active + auth_provider on every startup — matches the 'env-as-source-of-truth' requirement.",
+    "server._seed_demo: ENABLE_DEMO_SEED toggle works (default 'true', skipped when 'false'). Good for prod.",
+    "GoogleCallback.jsx uses processed.useRef guard to prevent double-exchange under React 18 StrictMode — correct pattern.",
+    "AdminDashboard dialog accessibility warning: 'Missing Description or aria-describedby for DialogContent' — minor a11y nit, not blocking. Consider adding <DialogDescription> to the reset-password dialog.",
+    "AdminRoute guard correctly redirects non-super-admin authenticated users to /app/dashboard (defence in depth — backend already 403s)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration3_admin_auth.py (new — 19 pytest cases covering super admin login, change password, admin RBAC stats/users/subscriptions, force reset, toggle active, google exchange empty+garbage, idempotent seed, demo regression)"
+  ],
+  "success_rate": {"backend": "100% (35/35 — 19 new + 16 regression)", "frontend": "100% (all 16 UI checks passed)"},
+  "test_credentials": "Super Admin: info@aitax.com / Ap@27021992 (seeded from env, password-only) — Tenant Demo: demo@aitax.in / Demo@12345 (Profile change-pw flow was exercised: changed to Demo@12345Z then reverted back to Demo@12345, so demo creds remain valid for next iteration)",
+  "seed_data_creation": "Test suite created ephemeral TEST_cp_*@aitax.in (change-password), TEST_fr_*@aitax.in (force-reset), TEST_ta_*@aitax.in (toggle-active) users via /api/auth/register. These remain in admin/users list (visible in screenshot). One of them was also force-reset via the UI flow. Demo password was changed twice (forward + revert) — net-zero change.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest suites: /app/backend/tests/test_aitax_regression.py (iteration_2 baseline) + /app/backend/tests/test_iteration3_admin_auth.py (iteration_3). Run both: `python -m pytest backend/tests/ -v`. Admin reset-password dialog uses a single input (type='text', NOT type='password') — selector for the input is `[role=\"dialog\"] input` (don't filter by type=password). Subscriptions tab is reached by clicking text 'Subscriptions' inside the admin page tabs. /auth/callback hashes drive the flow — must use `#session_id=...` (hash, not query). Super-admin Google block is verified in code only; cannot be tested live without a real Google account at info@aitax.com.",
+  "rca_of_the_issue": "No issues found. Iteration 3 implementation is correct end-to-end."
+}

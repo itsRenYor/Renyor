@@ -35,6 +35,9 @@ class UserOut(BaseModel):
     role: str
     active_company_id: Optional[str] = None
     created_at: str
+    is_super_admin: bool = False
+    auth_provider: str = "password"
+    picture: Optional[str] = None
 
 
 class TokenOut(BaseModel):

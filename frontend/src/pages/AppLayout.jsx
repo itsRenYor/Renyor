@@ -9,7 +9,7 @@ import {
 } from "../components/ui/dropdown-menu";
 import {
   LayoutDashboard, Users, Package, Truck, FileText, ShoppingCart,
-  BarChart3, Sun, Moon, LogOut, ChevronDown, Building2, Sparkles, BookOpen, Boxes
+  BarChart3, Sun, Moon, LogOut, ChevronDown, Building2, Sparkles, BookOpen, Boxes, ShieldCheck
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -133,6 +133,9 @@ export default function AppLayout() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => nav("/app/profile")} data-testid="user-menu-profile">
+                  <ShieldCheck className="h-4 w-4 mr-2" /> Profile & Password
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => nav("/app/billing")} data-testid="user-menu-billing">
                   <Sparkles className="h-4 w-4 mr-2" /> Billing & Plans
                 </DropdownMenuItem>

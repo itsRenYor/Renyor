@@ -15,6 +15,8 @@ export function AuthProvider({ children }) {
     localStorage.setItem("aitax_user", JSON.stringify(u));
     setUser(u);
   };
+  // Public helper for Google callback flow
+  const _setSession = (token, u) => persist(token, u);
 
   const login = async (email, password) => {
     setLoading(true);
@@ -52,7 +54,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthCtx.Provider value={{ user, loading, login, register, logout, refreshUser }}>
+    <AuthCtx.Provider value={{ user, loading, login, register, logout, refreshUser, _setSession }}>
       {children}
     </AuthCtx.Provider>
   );

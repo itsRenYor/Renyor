@@ -15,10 +15,20 @@ import Purchases from "./pages/Purchases";
 import Inventory from "./pages/Inventory";
 import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
+import Profile from "./pages/Profile";
+import GoogleCallback from "./pages/GoogleCallback";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function AdminRoute({ children }) {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.is_super_admin) return <Navigate to="/app/dashboard" replace />;
   return children;
 }
 
@@ -32,7 +42,9 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/auth/callback" element={<GoogleCallback />} />
           <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
@@ -43,6 +55,7 @@ function App() {
             <Route path="purchases" element={<Purchases />} />
             <Route path="inventory" element={<Inventory />} />
             <Route path="billing" element={<Billing />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
