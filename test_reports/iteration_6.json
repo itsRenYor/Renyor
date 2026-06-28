@@ -1,0 +1,68 @@
+{
+  "summary": "Iteration 6 (Super Admin Console + Maintenance Mode gating) FULLY PASSED. Backend: 23/23 new pytest cases green covering all /api/admin/* endpoints and the critical MaintenanceMiddleware behaviour. Frontend: end-to-end verified on the live preview URL — super admin login routes to /admin (Platform Owner Console) with all 7 tabs (Tenants, Subscriptions, Plans, Analytics, Settings, Feature Flags, Audit, Webhooks, Backup) rendering correctly; View-as-user opens read-only snapshot modal (admin URL never changes — no token swap); Maintenance Mode toggle ON/OFF works and the maintenance status banner appears in header. Demo tenant state has been restored (maintenance OFF, subscription back to trial, password = Demo@12345, active=true).",
+  "tested_scope": ["backend", "frontend", "integration"],
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "AdminDashboard view-as-user dialog", "issues": ["DialogContent missing aria-describedby — emits Radix UI a11y warning in console. Cosmetic only, not blocking."]}
+    ]
+  },
+  "feature_verification": {
+    "super_admin_login": "PASS — POST /api/auth/login returns access_token + user.is_super_admin=true",
+    "stats": "PASS — total_users, active_users, paid_subscribers, mrr_estimate, conversion_rate_pct, new_signups_30d all present and typed correctly",
+    "analytics_signups": "PASS — returns array of {date,count}",
+    "analytics_mrr_trend": "PASS — returns array",
+    "list_users": "PASS — demo@aitax.in present, _id stripped",
+    "user_snapshot": "PASS — companies, stats(customer/supplier/product counts), recent_invoices all present for demo user",
+    "force_password_reset": "PASS — set Reset@99999 → tenant could login with it → reset back to Demo@12345 → tenant login again works",
+    "toggle_active_blocks_login": "PASS — active=false → /api/auth/login returns 403; active=true → login succeeds again",
+    "extend_trial": "PASS — subscription_status=trial, expires_at in future",
+    "set_plan_pro": "PASS — subscription_plan=pro, status=active, expires_at set",
+    "cancel_subscription": "PASS — subscription_status=cancelled (then restored to trial)",
+    "list_plans_with_seed": "PASS — starter/pro/enterprise present (seeded on first read if empty)",
+    "update_plan_pricing": "PASS — PUT /api/admin/plans/pro persists new monthly value, restored after test",
+    "feature_flags_get": "PASS — returns 9 default flags including ai_features, whatsapp_share, pos_module",
+    "feature_flags_update_persists": "PASS — PUT updates persist across GET, restored after test",
+    "settings_defaults": "PASS — maintenance_mode=false, signup_mode=open, platform_name=AITAX, security block present",
+    "settings_update_persists": "PASS — platform_name updated and round-trips",
+    "audit_logs": "PASS — captures settings.update, user.set_plan, user.password_reset etc.",
+    "webhook_events": "PASS — returns array (8 entries from prior payment.captured/test.ping tests)",
+    "subscriptions": "PASS — returns array",
+    "backup": "PASS — exported_at, version, collection_counts, data all present; users count >= 1",
+    "tenant_blocked_from_admin": "PASS — demo tenant calling /api/admin/stats returns 403 'Super admin access required'",
+    "MAINTENANCE_MODE_GATING_CRITICAL": "PASS — with maintenance_mode=true: tenant /api/dashboard/kpis and /api/sales/invoices both return 503 with {maintenance_mode:true} in body; super admin /api/admin/stats still returns 200; /api/auth/login still works for tenant; after PUT maintenance_mode=false, tenant /api/dashboard/kpis returns 200 again",
+    "frontend_admin_login_redirect": "PASS — info@aitax.com redirected to /admin Platform Owner Console with stat cards (Tenants 43, Paid Subs 3, MRR ₹4,497, Lifetime Revenue, Trial 40, New(30d) 43, Conversion 6.98%, Invoices 3)",
+    "frontend_all_tabs_visible": "PASS — admin-tab-tenants/subs/plans/settings/flags/audit/webhooks all rendered",
+    "frontend_view_as_user_snapshot_readonly": "PASS — clicking admin-view-<id> opens 'View as: ...' dialog showing customers/suppliers/products/total-sales + Companies + Recent invoices + 'Read-only view — this access was logged' banner. Admin URL stays at /admin (no token swap performed)",
+    "frontend_maintenance_toggle": "PASS — setting-maintenance-toggle flips ON → header banner shows 'MAINTENANCE ON' badge + green toast 'maintenance_mode updated'. Flips OFF cleanly with another click; final aria-checked=false confirmed",
+    "frontend_plans_tab": "PASS — Starter row rendered (and Pro/Enterprise via earlier backend snapshot)",
+    "frontend_feature_flags_tab": "PASS — 9 flag rows rendered with toggle switches",
+    "frontend_audit_tab": "PASS — audit log entries visible from prior settings/plan/user operations",
+    "frontend_webhooks_tab": "PASS — 8 received Razorpay events listed (payment.captured/test.ping) with verified flag"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration6_super_admin.py",
+    "/app/test_reports/pytest/iteration_6.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "admin_router.py /api/admin/cancel-subscription doesn't filter is_super_admin from update — if user_id of a super admin were ever passed by mistake it could mark the platform owner's subscription cancelled. Other endpoints (reset-password, toggle-active, extend-trial, set-plan) correctly use {is_super_admin: {$ne: true}} guard; cancel-subscription should match for consistency.",
+    "admin_router.py /api/admin/feature-flags PUT accepts Dict[str,bool] with NO validation against DEFAULT_FLAGS keys — caller can inject arbitrary keys into feature_flags collection which then pollute subsequent GETs. Recommend whitelisting against DEFAULT_FLAGS keys.",
+    "server.py MaintenanceMiddleware: prefix-match on ALWAYS_OPEN_PATHS uses startswith, which means a tenant route accidentally prefixed '/api/admin-anything' would bypass maintenance. Today all admin routes are under /api/admin/ so it's safe, but consider using an explicit trailing slash compare or set lookup.",
+    "server.py MaintenanceMiddleware: settings are fetched from MongoDB on EVERY non-bypassed request — high traffic will cause one extra DB roundtrip per request. Consider in-process TTL cache (10-30s) since settings change rarely.",
+    "AdminDashboard.jsx: DialogContent for 'View as user' and other modals missing aria-describedby — Radix UI emits warning. Add <DialogDescription> or aria-describedby={undefined} suppression.",
+    "AdminDashboard.jsx: 'Lifetime Revenue' (₹4,497) is computed from subscription_orders.amount sum which mixes monthly/quarterly/yearly amounts — labeling it 'Lifetime Revenue' is accurate but the MRR Estimate next to it (₹4,497) is misleading because backend computes MRR from active subscribers × plan_monthly map — verify the two cards aren't confusingly identical when they happen to coincide.",
+    "Backup endpoint dumps up to 50000 docs PER collection synchronously into one JSON response — this will OOM and stall the worker on a real-size tenant set. Should stream as NDJSON or chunk per collection."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration6_super_admin.py (created)"
+  ],
+  "success_rate": {"backend": "100% (23/23)", "frontend": "100% verified flows"},
+  "test_credentials": "info@aitax.com / Ap@27021992 (super admin), demo@aitax.in / Demo@12345 (tenant)",
+  "seed_data_creation": "No new tenant data created — all mutations against demo@aitax.in were reverted (password restored, active=true restored, subscription set back to trial via extend-trial). Maintenance mode VERIFIED OFF at end of run via curl: /api/admin/settings shows maintenance_mode:false and tenant /api/dashboard/kpis returns 200.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 6 fully green. Login response uses 'access_token' (NOT 'token') — past iterations used a different key. New backend test file is test_iteration6_super_admin.py with 23 cases (~40s). Tenant /api/dashboard endpoint is /api/dashboard/kpis (NOT /summary). MaintenanceMiddleware bypass list = /api/auth, /api/admin, /api/webhooks, /api/health — anything else returns 503 when maintenance_mode=true. View-as-user is purely a read-only snapshot endpoint (/api/admin/users/{id}/snapshot) — no JWT swap. Demo user state restored to trial+active+Demo@12345 password. Webhook events collection has 8+ Razorpay events from iteration 5 — useful for testing the webhooks tab UI."
+}

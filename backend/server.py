@@ -1,9 +1,10 @@
 """AITAX FastAPI server."""
 import logging
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
-
+from starlette.middleware.base import BaseHTTPMiddleware
 from db import db
 from auth import hash_password
 from models import _id, _now
@@ -22,7 +23,33 @@ from routers.tours_router import router as tours_router
 from routers.transport_router import router as transport_router
 from routers.webhooks_router import router as webhooks_router
 
-app = FastAPI(title="AITAX API", version="1.0.0")
+app = FastAPI(title="AITAX API", version="1.1.0")
+
+ALWAYS_OPEN_PATHS = (
+    "/api/auth/login", "/api/auth/me", "/api/auth/google",
+    "/api/admin", "/api/health", "/api/webhooks",
+)
+
+
+class MaintenanceMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+        if not path.startswith("/api/") or any(path.startswith(p) for p in ALWAYS_OPEN_PATHS) or path == "/api/":
+            return await call_next(request)
+        try:
+            s = await db.platform_settings.find_one({"_id": "global"})
+        except Exception:
+            return await call_next(request)
+        if s and s.get("maintenance_mode"):
+            return JSONResponse(
+                status_code=503,
+                content={"detail": s.get("maintenance_message", "Platform under maintenance"),
+                         "maintenance_mode": True},
+            )
+        return await call_next(request)
+
+
+app.add_middleware(MaintenanceMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -50,7 +77,7 @@ app.include_router(webhooks_router)
 
 @app.get("/api/")
 async def root():
-    return {"app": "AITAX", "version": "1.0.0", "status": "ok"}
+    return {"app": "AITAX", "version": "1.1.0", "status": "ok"}
 
 
 @app.get("/api/health")
