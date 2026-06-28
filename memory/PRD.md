@@ -43,25 +43,26 @@ Kirana, hardware, medical & textile shop owners · wholesalers · distributors �
 - Pricing & Billing pages with Razorpay checkout flow
 - Light + Dark mode with localStorage persistence
 
+## What's Built — Cumulative (through Iteration 6, Feb 2026)
+- Iteration 3: Super Admin basics, Google OAuth, password reset
+- Iteration 4: GST (GSTR-1/3B), POS, Multi-company switcher, PDF invoices (reportlab)
+- Iteration 5: Accounting engine (double-entry, Ledgers, Trial Balance, P&L, Balance Sheet), Services, Tours, Transport modules, Razorpay webhooks
+- Iteration 6: **Comprehensive Super Admin Console** (`/admin`) — Tenants list w/ view-as-user (read-only snapshot), Subscriptions, editable Plans, Global Settings, Feature Flags, Audit Logs, Webhook Events viewer, DB Backup, Maintenance Mode middleware
+
 ## Testing
-- Iteration 1 (Feb 27): 22/22 critical tests passed. 1 LOW issue (testid naming) — fixed.
+- Iteration 1 (22/22), 2 (refactor), 3 (super-admin/google), 4 (GST/POS/PDF), 5 (accounting/services/tours/transport/webhooks), 6 (23/23 super-admin + maintenance) — ALL GREEN
 
 ## Backlog (Prioritized)
 
 ### P0 — Next iteration
-- GST reports (GSTR-1, GSTR-3B export to JSON/Excel)
-- PDF invoice generation & WhatsApp/Email share
-- Multi-company switcher in topbar
-- POS billing screen (touch-optimized for shops)
+- AMC Module (Contracts, Renewals, Reminder scheduler)
+- File/Object storage integration (upload bills, vehicle docs, AMC agreements)
 
 ### P1
-- Service Management (AMC, Job Cards, Technician assignment)
-- Tour Operator module (Packages, Bookings, Vendor payments)
-- Transport module (Trip sheet, LR, Diesel, Freight)
-- Accounting engine (double-entry, ledgers, Trial Balance, P&L, Balance Sheet)
-- AI: Receipt OCR, expense categorization, NL reports
-- Bulk import (Excel) for products/customers
-- Razorpay webhook handler for failed/refunded payments
+- AI: Receipt OCR, Bill OCR, Expense categorization, GST error detection, NL reports
+- Bulk Excel import for products/customers
+- Audit trail UI (data already captured)
+- Stream-based Backup endpoint (current dumps all at once)
 
 ### P2
 - E-way bill API integration

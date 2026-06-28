@@ -288,10 +288,12 @@ async def set_plan(user_id: str, body: SetPlanIn, admin=Depends(require_super_ad
 
 @router.post("/users/{user_id}/cancel-subscription")
 async def cancel_sub(user_id: str, admin=Depends(require_super_admin)):
-    await db.users.update_one(
-        {"id": user_id},
+    res = await db.users.update_one(
+        {"id": user_id, "is_super_admin": {"$ne": True}},
         {"$set": {"subscription_status": "cancelled"}},
     )
+    if res.matched_count == 0:
+        raise HTTPException(404, "User not found")
     await _audit("user.cancel_subscription", target=user_id, admin=admin)
     return {"ok": True}
 
