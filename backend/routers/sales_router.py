@@ -1,8 +1,11 @@
 """Sales: Invoices, Quotations, Credit Notes, POS."""
 from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi.responses import StreamingResponse
+import io
 from db import db
 from models import InvoiceIn, _id, _now
 from auth import require_company
+from pdf_invoice import build_invoice_pdf
 
 router = APIRouter(prefix="/api/sales", tags=["sales"])
 
@@ -195,3 +198,53 @@ async def record_payment(iid: str, amount: float, mode: str = "cash", ctx=Depend
         }
     )
     return {"ok": True, "balance_due": round(balance, 2), "status": status}
+
+
+@router.get("/{iid}/pdf")
+async def invoice_pdf(iid: str, ctx=Depends(require_company)):
+    _, cid = ctx
+    inv = await db.invoices.find_one({"id": iid, "company_id": cid}, {"_id": 0})
+    if not inv:
+        raise HTTPException(404, "Not found")
+    comp = await db.companies.find_one({"id": cid}, {"_id": 0}) or {}
+    data = build_invoice_pdf(inv, comp)
+    return StreamingResponse(
+        io.BytesIO(data),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"inline; filename={inv['invoice_number']}.pdf"},
+    )
+
+
+@router.get("/{iid}/share")
+async def share_links(iid: str, ctx=Depends(require_company)):
+    """Return wa.me + mailto links for sharing the invoice."""
+    _, cid = ctx
+    inv = await db.invoices.find_one({"id": iid, "company_id": cid}, {"_id": 0})
+    if not inv:
+        raise HTTPException(404, "Not found")
+    comp = await db.companies.find_one({"id": cid}, {"_id": 0}) or {}
+    party = None
+    if inv.get("party_id"):
+        party = await db.parties.find_one({"id": inv["party_id"]}, {"_id": 0})
+
+    msg = (
+        f"Hello {inv['party_name']},\n\n"
+        f"Your invoice {inv['invoice_number']} from {comp.get('name','')} is ready.\n"
+        f"Amount: ₹{inv['grand_total']:,.2f}\n"
+        f"Date: {inv['invoice_date']}\n\n"
+        f"Thank you for your business."
+    )
+    phone = ((party or {}).get("phone") or "").replace(" ", "").replace("-", "") if party else ""
+    if phone and not phone.startswith("+"):
+        phone = "91" + phone.lstrip("0")
+    phone = phone.lstrip("+")
+
+    from urllib.parse import quote
+    wa_link = f"https://wa.me/{phone}?text={quote(msg)}" if phone else f"https://wa.me/?text={quote(msg)}"
+    mailto = (
+        f"mailto:{(party or {}).get('email','')}"
+        f"?subject={quote('Invoice ' + inv['invoice_number'] + ' from ' + comp.get('name',''))}"
+        f"&body={quote(msg)}"
+    )
+    return {"whatsapp_url": wa_link, "mailto_url": mailto, "phone": phone or None,
+            "email": (party or {}).get("email")}

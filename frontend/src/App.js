@@ -18,6 +18,8 @@ import Billing from "./pages/Billing";
 import Profile from "./pages/Profile";
 import GoogleCallback from "./pages/GoogleCallback";
 import AdminDashboard from "./pages/AdminDashboard";
+import GstReports from "./pages/GstReports";
+import POS from "./pages/POS";
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -52,8 +54,10 @@ function App() {
             <Route path="suppliers" element={<Parties partyType="supplier" />} />
             <Route path="products" element={<Products />} />
             <Route path="sales" element={<Sales />} />
+            <Route path="pos" element={<POS />} />
             <Route path="purchases" element={<Purchases />} />
             <Route path="inventory" element={<Inventory />} />
+            <Route path="gst" element={<GstReports />} />
             <Route path="billing" element={<Billing />} />
             <Route path="profile" element={<Profile />} />
           </Route>

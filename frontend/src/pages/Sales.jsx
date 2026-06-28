@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { formatINR, formatDate, today } from "../lib/format";
-import { Plus, Trash2, Loader2, Eye, X } from "lucide-react";
+import { Plus, Trash2, Loader2, Eye, X, FileDown, Share2, MessageCircle, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 const TYPES = [
@@ -249,6 +249,34 @@ export default function SalesPage() {
     await api.delete(`/sales/${id}`); toast.success("Deleted"); load();
   };
 
+  const openPdf = (id) => {
+    const token = localStorage.getItem("aitax_token");
+    window.open(`${api.defaults.baseURL}/sales/${id}/pdf?token=${encodeURIComponent(token)}`, "_blank");
+  };
+
+  // PDF endpoint is auth-protected via Bearer header. We open via a temporary fetch+blob approach.
+  const downloadPdf = async (id, inv_num) => {
+    try {
+      const res = await api.get(`/sales/${id}/pdf`, { responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch (err) {
+      toast.error("Failed to load PDF");
+    }
+  };
+
+  const shareInvoice = async (id, kind) => {
+    try {
+      const { data } = await api.get(`/sales/${id}/share`);
+      const target = kind === "wa" ? data.whatsapp_url : data.mailto_url;
+      if (!target) return toast.error("No contact info on customer");
+      window.open(target, "_blank");
+    } catch (err) {
+      toast.error("Could not generate share link");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3 items-end justify-between">
@@ -310,6 +338,15 @@ export default function SalesPage() {
                 </TableCell>
                 <TableCell><Badge className={`${STATUS_COLOR[inv.status] || "bg-muted"} hover:bg-current/20 border-0 capitalize`}>{inv.status}</Badge></TableCell>
                 <TableCell className="text-right">
+                  <Button size="icon" variant="ghost" title="PDF" onClick={() => downloadPdf(inv.id, inv.invoice_number)} data-testid={`invoice-pdf-${inv.id}`}>
+                    <FileDown className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="icon" variant="ghost" title="WhatsApp" onClick={() => shareInvoice(inv.id, "wa")} data-testid={`invoice-wa-${inv.id}`}>
+                    <MessageCircle className="h-3.5 w-3.5 text-success" />
+                  </Button>
+                  <Button size="icon" variant="ghost" title="Email" onClick={() => shareInvoice(inv.id, "email")} data-testid={`invoice-email-${inv.id}`}>
+                    <Mail className="h-3.5 w-3.5" />
+                  </Button>
                   <Button size="icon" variant="ghost" onClick={() => onDelete(inv.id)} data-testid={`invoice-delete-${inv.id}`}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
                 </TableCell>
               </TableRow>

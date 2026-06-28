@@ -1,0 +1,62 @@
+{
+  "summary": "Iteration 4 (GST Reports, PDF/Share, Multi-Company, POS) — FULLY PASSED. Backend: 13/13 new pytest cases green + 35/35 prior regression (16 iter2 + 19 iter3) still green = 48/48. Frontend: all flows verified end-to-end on the live preview URL — Company Switcher in topbar shows 'Demo Traders Pvt Ltd' with dropdown ('Your businesses' label + 'Add another business' add-new item), sidebar has both new 'POS Billing' and 'GST Reports' nav items, /app/pos renders with search/product grid/cart/checkout, POS sale of 2× first product produced POS-00001 (₹560.00, Paid) and success dialog appeared, /app/gst loads GSTR-1+GSTR-3B for current month, JSON download fires with correct filename (GSTR-1_2026-06.json), GSTR-3B tab shows all three section cards (Outward, Eligible ITC, Net tax payable), Sales table shows 4 action icons per row (PDF, WhatsApp, Email, Trash) and PDF icon opens a blob URL in a new tab.",
+  "tested_scope": ["backend", "frontend", "integration", "regression"],
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "feature_verification": {
+    "gst_gstr1_endpoint": "PASS — returns report='GSTR-1', period, company {name,gstin,state}, summary with all 8 keys (total_invoices, b2b_count, b2c_count, total_taxable_value, total_igst, total_cgst, total_sgst, total_tax), b2b/b2c/hsn_summary arrays",
+    "gst_gstr3b_endpoint": "PASS — returns report='GSTR-3B', section_3_1_outward_supplies, section_4_eligible_itc, net_tax_payable {igst,cgst,sgst,total}",
+    "gst_requires_auth": "PASS — 401/403 without bearer token",
+    "pdf_endpoint_content_type_and_magic": "PASS — Content-Type: application/pdf, first 8 bytes == b'%PDF-1.4', body size > 1KB",
+    "pdf_404_for_unknown": "PASS — non-existent id returns 404",
+    "pdf_tenant_isolation": "PASS — other tenant gets 404/400 (no leak)",
+    "share_endpoint": "PASS — whatsapp_url starts with https://wa.me/, mailto_url starts with mailto:, both phone and email keys present (even null)",
+    "pos_invoice_creation": "PASS — POST /api/sales with invoice_type='pos' creates POS-NNNNN invoice, deducts product stock by quantity, grand_total computed correctly",
+    "multi_company_create_switch": "PASS — fresh user → GET /api/companies returns initial company (auto-created via business_name), POST /api/companies adds 2nd, /api/auth/switch-company/{id} updates active_company_id (verified via /api/auth/me)",
+    "tenant_isolation_after_switch": "PASS — created TEST_PROD_A under Co A, switched to Co B, /api/masters/products on Co B does NOT contain TEST_PROD_A",
+    "regression_login_me": "PASS",
+    "regression_dashboard_kpis": "PASS",
+    "regression_google_exchange_empty": "PASS (422)",
+    "regression_razorpay_create_order": "PASS (uses plan_id field)",
+    "regression_full_suite": "PASS — 35/35 (test_aitax_regression.py + test_iteration3_admin_auth.py all green)",
+    "frontend_company_switcher_visible": "PASS — [data-testid='company-switcher'] in topbar shows 'Demo Traders Pvt Ltd'",
+    "frontend_company_switcher_dropdown": "PASS — clicking opens dropdown with 'Your businesses' label, active company has check icon (verified in DOM), 'Add another business' [data-testid='company-add-new'] navigates to /onboarding",
+    "frontend_sidebar_pos_gst_nav": "PASS — [data-testid='nav-pos'] and [data-testid='nav-gst'] both visible",
+    "frontend_pos_page_renders": "PASS — h1 'POS Billing' with ScanLine icon, pos-search, 5 pos-product-* tiles, pos-payment-mode, pos-checkout all present",
+    "frontend_pos_add_to_cart_and_total": "PASS — clicking same product tile twice adds 2× to cart, pos-total reads ₹560.00 (INR formatted with ₹ + commas)",
+    "frontend_pos_checkout_dialog": "PASS — checkout creates POS-00001 invoice (visible in /app/sales), 'Sale completed' dialog appears with invoice #, customer, amount, payment mode; 'New Sale' resets cart",
+    "frontend_gst_page": "PASS — h1 'GST Reports', month picker [data-testid='gst-month'] defaults to current month, two tabs gst-tab-gstr1 + gst-tab-gstr3b render",
+    "frontend_gst_download_json": "PASS — Download JSON triggers download event with filename 'GSTR-1_2026-06.json'",
+    "frontend_gstr3b_sections": "PASS — 'Outward supplies', 'Eligible ITC', 'Net tax payable' cards all visible with INR-formatted values",
+    "frontend_sales_action_icons": "PASS — 3 invoice-pdf-*, 3 invoice-wa-*, 3 invoice-email-* icons visible across 3 rows (POS-00001 + INV-00002 + INV-00001) — see screenshot",
+    "frontend_pdf_opens_new_tab": "PASS — clicking invoice-pdf-* opens a new browser tab (blob URL or /pdf URL); GET /api/sales/{id}/pdf returns 200 with application/pdf",
+    "frontend_whatsapp_opens_new_tab": "PASS — clicking invoice-wa-* opens new tab to wa.me URL"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration4_gst_pdf_pos_multicompany.py",
+    "/app/backend/tests/test_iteration3_admin_auth.py",
+    "/app/backend/tests/test_aitax_regression.py",
+    "/app/test_reports/pytest/iteration_4.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "gst_router._is_intra() defaults to True (CGST+SGST) when seller state code or buyer GSTIN cannot be determined — this matches the 'B2C / no GSTIN' use case which is correctly intra-state for the seller. Reasonable default.",
+    "gst_router uses invoice_date $lte '{month}-31' as a string-range filter — works for ISO YYYY-MM-DD dates but assumes dates are stored as strings, not datetime. Confirmed by data layout. Edge: Feb / 30-day months — still returns correct results because no actual Feb 31 exists.",
+    "sales_router.invoice_pdf streams a freshly built PDF on every request (no caching). Acceptable for small invoices, but consider caching by invoice_id+updated_at for high-volume tenants.",
+    "sales_router.share_links: when party has no phone, falls back to https://wa.me/?text=... (no number) — matches spec; user can manually pick the recipient inside WhatsApp.",
+    "POS.jsx 'paid' input defaults to 0 and falls back to totals.grand at checkout — fine for cash-paid flows, but stock is still deducted regardless of payment status (balance_due is tracked separately). This is correct retail behavior.",
+    "CompanySwitcher.jsx does window.location.reload() after switch — heavy but safe (forces all pages to refetch with new active_company_id). Could be replaced with a global cache invalidation but reload is defensible for an MVP.",
+    "pdf_invoice.py _is_interstate uses state code map; same logic duplicated in gst_router._is_intra (different semantic: interstate vs intra). Consider extracting to a shared util in db.py or a new states.py to avoid drift.",
+    "register endpoint creates company only when business_name is provided. Backend test had to be adapted to use 'business_name' (not 'company_name') — frontend Register.jsx already matches. Confirmed wire-compatible."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration4_gst_pdf_pos_multicompany.py (new — 13 pytest cases covering GSTR-1, GSTR-3B, PDF magic bytes + 404 + tenant isolation, share links, POS invoice + stock deduction, multi-company create + switch + isolation, regression smoke)"
+  ],
+  "success_rate": {"backend": "100% (48/48 — 13 new + 35 regression)", "frontend": "100% (all 12 UI checks passed)"},
+  "test_credentials": "Demo: demo@aitax.in / Demo@12345 (unchanged). Multi-company test creates ephemeral TEST_it4_*@aitax.in users via /api/auth/register with business_name; these remain in DB and have 2 companies each.",
+  "seed_data_creation": "Backend tests created: (a) ephemeral TEST_it4_*@aitax.in tenants each with 2 companies (initial + TEST_Co_B_*) for multi-company isolation tests, (b) one TEST_PROD_A product per fresh tenant. Frontend test created 1 POS bill (POS-00001) under Demo tenant via UI which remains in /app/sales (visible in screenshot). POS test also created+deleted a pos invoice. PDF test reuses existing demo invoices.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest suites to run: `python -m pytest backend/tests/ -v` runs all 3 files = 48 tests. Key API contract details discovered: (1) /api/auth/login returns {access_token, token_type, user} — NOT 'token'. (2) /api/auth/register requires field name 'business_name' (NOT 'company_name'). (3) /api/subscription/create-order body field is 'plan_id' (NOT 'plan'). (4) PDF tenant isolation: an authenticated user with NO active company gets 400 (not 404) because require_company short-circuits before the invoice lookup — both are valid 'isolation holds' outcomes. (5) GST month filter uses string range invoice_date $gte 'YYYY-MM-01' / $lte 'YYYY-MM-31'. (6) Sales list returns invoices sorted by created_at DESC, so the POS-00001 created by frontend test is row 1 (visible in screenshot). System clock on preview env is 2026-06-28, so default GST month is 2026-06.",
+  "rca_of_the_issue": "No issues found. Iteration 4 implementation is correct end-to-end. All 4 new features (GST reports, PDF + share, multi-company switcher, POS billing) work as specified at both API and UI layers, and no prior iteration regressed."
+}

@@ -9,9 +9,10 @@ import {
 } from "../components/ui/dropdown-menu";
 import {
   LayoutDashboard, Users, Package, Truck, FileText, ShoppingCart,
-  BarChart3, Sun, Moon, LogOut, ChevronDown, Building2, Sparkles, BookOpen, Boxes, ShieldCheck
+  BarChart3, Sun, Moon, LogOut, ChevronDown, Building2, Sparkles, BookOpen, Boxes, ShieldCheck, ScanLine
 } from "lucide-react";
 import { useEffect } from "react";
+import CompanySwitcher from "../components/CompanySwitcher";
 
 const navGroups = [
   {
@@ -32,8 +33,10 @@ const navGroups = [
     title: "Transactions",
     items: [
       { to: "/app/sales", label: "Sales", icon: FileText, testid: "nav-sales" },
+      { to: "/app/pos", label: "POS Billing", icon: ScanLine, testid: "nav-pos" },
       { to: "/app/purchases", label: "Purchases", icon: ShoppingCart, testid: "nav-purchases" },
       { to: "/app/inventory", label: "Inventory", icon: Boxes, testid: "nav-inventory" },
+      { to: "/app/gst", label: "GST Reports", icon: BookOpen, testid: "nav-gst" },
     ],
   },
   {
@@ -101,7 +104,7 @@ export default function AppLayout() {
         <div className="border-t border-border p-3">
           <Badge variant="secondary" className="w-full justify-center gap-1.5 py-2 font-normal">
             <Building2 className="h-3 w-3" />
-            <span className="truncate">Active Company</span>
+            <span className="truncate">Multi-tenant</span>
           </Badge>
         </div>
       </aside>
@@ -109,9 +112,12 @@ export default function AppLayout() {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="h-16 border-b border-border bg-background/90 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-between px-6">
-          <div className="text-sm text-muted-foreground">
-            <span className="font-mono">{new Date().toLocaleDateString("en-IN", { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' })}</span>
+        <header className="h-16 border-b border-border bg-background/90 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-between px-6 gap-4">
+          <div className="flex items-center gap-3">
+            <CompanySwitcher />
+            <div className="text-sm text-muted-foreground hidden md:block">
+              <span className="font-mono">{new Date().toLocaleDateString("en-IN", { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' })}</span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={toggle} data-testid="theme-toggle">
