@@ -1,0 +1,55 @@
+{
+  "summary": "Iteration 5 (Accounting engine + Razorpay webhooks + Service/Tours/Transport) FULLY PASSED. Backend: 26/26 new pytest cases green + 48/48 prior regression (iter2+iter3+iter4) still green = 74/74. Frontend: Verified end-to-end on live preview URL — sidebar now has Operations group (Service & AMC, Tours, Transport) and Finance group (Accounting, GST Reports) with all 5 data-testids visible; /app/accounting renders 4 tabs (P&L, Balance Sheet, Trial Balance, Expenses) with Income/Gross Profit/Net Profit visible; expense create flow produces an expense visible in table; /app/services New Ticket creates SRV-NNNNN visible in table; New AMC creates AMC-NNNNN; /app/tours New Package dialog opens with package-name/sale-price testids; /app/transport Add Vehicle dialog opens with vehicle-number/vehicle-submit testids.",
+  "tested_scope": ["backend", "frontend", "integration", "regression"],
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "feature_verification": {
+    "accounting_profit_loss": "PASS — returns income{gross_sales,sales_returns,net_sales}, cost_of_goods{purchases}, gross_profit, expenses[], total_expenses, net_profit",
+    "accounting_balance_sheet": "PASS — clean tenant: Assets == Liabilities + Equity (totals_match=true), structure with as_on/assets/liabilities/equity",
+    "accounting_trial_balance": "PASS — accounts[], total_debit, total_credit, difference all present",
+    "accounting_expenses_crud": "PASS — POST creates, GET lists (filtered by company_id), DELETE removes, P&L expenses array reflects new category",
+    "accounting_party_ledger": "PASS — /api/accounting/ledger/party/{id} returns party + entries[] with running balance + closing_balance",
+    "accounting_tenant_isolation": "PASS — user A's expense not visible to user B",
+    "webhook_no_signature_dev_mode": "PASS — POST without X-Razorpay-Signature accepted (RAZORPAY_WEBHOOK_SECRET unset), event logged to db.webhook_events",
+    "webhook_events_list": "PASS — GET /api/webhooks/events returns array",
+    "webhook_payment_captured_activates_subscription": "PASS — full e2e: created sub order via /api/subscription/create-order (plan=pro), POSTed payment.captured webhook with that order_id, subscription_orders.status='paid' and /api/subscription/status returns status='active'",
+    "services_tickets_crud": "PASS — auto SRV-NNNNN, POST/GET/PUT/DELETE all working",
+    "services_amc_crud_and_status": "PASS — auto AMC-NNNNN, list computes days_remaining + auto sets status: active (>30d), expiring_soon (<=30d), expired (<0d)",
+    "services_tenant_isolation": "PASS",
+    "tours_packages_and_bookings": "PASS — auto TR-NNNNN booking_number, list bookings adds computed profit=(sale-cost)*travelers (verified 12000 for 4×(8000-5000))",
+    "tours_tenant_isolation": "PASS",
+    "transport_vehicles_and_trips": "PASS — auto TRIP-NNNNN, list adds profit=freight-diesel-other (verified 10000 for 15000-4000-1000)",
+    "transport_tenant_isolation": "PASS",
+    "auth_gating_all_new_endpoints": "PASS — all 10 GET endpoints return 401/403 without auth",
+    "regression_iteration_2_3_4": "PASS — 48/48 prior tests still green (auth, dashboard, masters, sales, purchases, payments, GST, PDF, POS, multi-company switch, subscription)",
+    "frontend_sidebar_groups": "PASS — sidebar visually shows OVERVIEW, MASTERS, TRANSACTIONS, OPERATIONS (Service & AMC + Tours + Transport), FINANCE (Accounting + GST Reports), ACCOUNT groups (verified in screenshot)",
+    "frontend_sidebar_testids": "PASS — nav-services, nav-tours, nav-transport, nav-accounting, nav-gst all rendered",
+    "frontend_accounting_page": "PASS — 4 tabs (acc-tab-pnl/bs/tb/exp) render; P&L shows Income/Gross Profit/Net Profit with INR formatting",
+    "frontend_expense_create": "PASS — expense-add → expense-category → expense-amount → expense-submit creates expense (1,234 appears in table)",
+    "frontend_services_ticket_create": "PASS — ticket-add dialog → ticket-customer+ticket-problem filled → ticket-submit → SRV-NNNNN and UI_Test_Customer visible in table",
+    "frontend_services_amc_create": "PASS — amc-add dialog renders amc-customer + amc-end-date + amc-submit; AMC- visible in table",
+    "frontend_tours_page_renders": "PASS — tour-tab-packages + tour-tab-bookings + package-add (testid present); package-name + package-sale-price + package-submit testids verified",
+    "frontend_transport_page_renders": "PASS — tr-tab-vehicles + tr-tab-trips + vehicle-add dialog with vehicle-number/vehicle-submit testids verified"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration5_accounting_webhooks_ops.py",
+    "/app/test_reports/pytest/iteration_5.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "webhooks_router.py: GET /api/webhooks/events is unauthenticated and exposes raw event payloads — fine for dev/diagnostics but should be admin-gated before production",
+    "accounting_router.py balance_sheet: capital_and_reserves is computed as (total_assets - total_liabilities) plug, which makes totals_match always true by construction. This is acceptable for an aggregation layer but means the BS cannot detect real bookkeeping errors. Document this limitation or add a separate 'retained earnings' calc from P&L period",
+    "accounting_router.py trial_balance: the trial balance won't actually balance in this aggregation model (e.g., Sales credit has no offsetting Debtors/Cash debit booked unless invoice was paid). 'difference' will be non-zero on most real data — UI should display this clearly rather than imply mismatch is an error",
+    "tours_router.py + transport_router.py: profit is computed on-the-fly in list endpoints but NOT persisted on the document. Consider storing profit at create time to avoid recomputing on every read (minor perf)",
+    "services_router.py list_amc: mutates status in-memory after fetch but never writes back to DB — so DB status stays whatever was last set. If you want true persistence of expiring_soon/expired, run a daily job or update on read"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration5_accounting_webhooks_ops.py (created)"
+  ],
+  "success_rate": {"backend": "100% (26/26 new + 48/48 regression = 74/74)", "frontend": "100% verified flows"},
+  "test_credentials": "demo@aitax.in / Demo@12345 (tenant), info@aitax.com / Ap@27021992 (super admin)",
+  "seed_data_creation": "Test data prefixed TEST_ (expenses, tickets, AMCs, packages, bookings, vehicles, trips) created in fresh registered tenants (TEST_it5_*@aitax.in) for isolation testing. Demo tenant got 1 expense + 1 ticket + 1 AMC + 1 package + 1 vehicle from UI run (visible in screenshots).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 5 is fully green. Backend test suite is now 74 tests across 4 files (test_aitax_regression.py iter2, test_iteration3_admin_auth.py, test_iteration4_gst_pdf_pos_multicompany.py, test_iteration5_accounting_webhooks_ops.py) — runs in ~75s. Valid subscription plan IDs are 'starter' and 'pro' (NOT 'professional'). /api/auth/me UserOut model does NOT include subscription_status — use /api/subscription/status which returns {plan, status, expires_at, billing_cycle}. Webhook secret RAZORPAY_WEBHOOK_SECRET is intentionally unset in dev — production must set it. Note: trial_balance.difference is expected to be non-zero on real data due to aggregation-layer design (see code review comments)."
+}

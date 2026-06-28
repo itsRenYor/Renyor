@@ -20,6 +20,10 @@ import GoogleCallback from "./pages/GoogleCallback";
 import AdminDashboard from "./pages/AdminDashboard";
 import GstReports from "./pages/GstReports";
 import POS from "./pages/POS";
+import Accounting from "./pages/Accounting";
+import Services from "./pages/Services";
+import Tours from "./pages/Tours";
+import Transport from "./pages/Transport";
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -58,6 +62,10 @@ function App() {
             <Route path="purchases" element={<Purchases />} />
             <Route path="inventory" element={<Inventory />} />
             <Route path="gst" element={<GstReports />} />
+            <Route path="accounting" element={<Accounting />} />
+            <Route path="services" element={<Services />} />
+            <Route path="tours" element={<Tours />} />
+            <Route path="transport" element={<Transport />} />
             <Route path="billing" element={<Billing />} />
             <Route path="profile" element={<Profile />} />
           </Route>

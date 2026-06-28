@@ -9,7 +9,7 @@ import {
 } from "../components/ui/dropdown-menu";
 import {
   LayoutDashboard, Users, Package, Truck, FileText, ShoppingCart,
-  BarChart3, Sun, Moon, LogOut, ChevronDown, Building2, Sparkles, BookOpen, Boxes, ShieldCheck, ScanLine
+  BarChart3, Sun, Moon, LogOut, ChevronDown, Building2, Sparkles, BookOpen, Boxes, ShieldCheck, ScanLine, Wrench, Plane
 } from "lucide-react";
 import { useEffect } from "react";
 import CompanySwitcher from "../components/CompanySwitcher";
@@ -36,6 +36,20 @@ const navGroups = [
       { to: "/app/pos", label: "POS Billing", icon: ScanLine, testid: "nav-pos" },
       { to: "/app/purchases", label: "Purchases", icon: ShoppingCart, testid: "nav-purchases" },
       { to: "/app/inventory", label: "Inventory", icon: Boxes, testid: "nav-inventory" },
+    ],
+  },
+  {
+    title: "Operations",
+    items: [
+      { to: "/app/services", label: "Service & AMC", icon: Wrench, testid: "nav-services" },
+      { to: "/app/tours", label: "Tours", icon: Plane, testid: "nav-tours" },
+      { to: "/app/transport", label: "Transport", icon: Truck, testid: "nav-transport" },
+    ],
+  },
+  {
+    title: "Finance",
+    items: [
+      { to: "/app/accounting", label: "Accounting", icon: BarChart3, testid: "nav-accounting" },
       { to: "/app/gst", label: "GST Reports", icon: BookOpen, testid: "nav-gst" },
     ],
   },

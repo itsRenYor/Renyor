@@ -16,6 +16,11 @@ from routers.dashboard_router import router as dashboard_router
 from routers.subscription_router import router as subscription_router
 from routers.admin_router import router as admin_router
 from routers.gst_router import router as gst_router
+from routers.accounting_router import router as accounting_router
+from routers.services_router import router as services_router
+from routers.tours_router import router as tours_router
+from routers.transport_router import router as transport_router
+from routers.webhooks_router import router as webhooks_router
 
 app = FastAPI(title="AITAX API", version="1.0.0")
 
@@ -36,6 +41,11 @@ app.include_router(dashboard_router)
 app.include_router(subscription_router)
 app.include_router(admin_router)
 app.include_router(gst_router)
+app.include_router(accounting_router)
+app.include_router(services_router)
+app.include_router(tours_router)
+app.include_router(transport_router)
+app.include_router(webhooks_router)
 
 
 @app.get("/api/")
