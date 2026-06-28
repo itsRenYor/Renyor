@@ -126,7 +126,7 @@ export default function Landing() {
           <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border rounded-lg overflow-hidden border border-border">
             {features.map((f, i) => (
               <div
-                key={i}
+                key={f.title}
                 className="bg-card p-6 hover:bg-muted/40 transition-colors"
                 data-testid={`feature-${i}`}
               >
@@ -176,7 +176,7 @@ export default function Landing() {
               { img: "https://images.unsplash.com/photo-1762341124796-530c0085f7d8?crop=entropy&cs=srgb&fm=jpg&q=85&w=200", name: "Meera Joshi", role: "Textile Retailer, Surat", quote: "Stock + invoicing in one. Never overselling now. Saved 4 hrs/week." },
               { img: "https://images.pexels.com/photos/7580766/pexels-photo-7580766.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=200", name: "CA Rohan Mehta", role: "Practicing CA", quote: "I manage 38 clients here. Switching companies is one click. Beautiful." },
             ].map((t, i) => (
-              <div key={i} className="rounded-lg border border-border bg-card p-6" data-testid={`testimonial-${i}`}>
+              <div key={t.name} className="rounded-lg border border-border bg-card p-6" data-testid={`testimonial-${i}`}>
                 <p className="text-sm leading-relaxed">"{t.quote}"</p>
                 <div className="mt-5 flex items-center gap-3">
                   <img src={t.img} alt={t.name} className="h-10 w-10 rounded-full object-cover" />

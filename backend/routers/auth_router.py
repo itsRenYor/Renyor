@@ -91,7 +91,7 @@ async def login(body: UserLogin):
     u = await db.users.find_one({"email": body.email.lower()})
     if not u or not u.get("password_hash") or not verify_password(body.password, u["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    if u.get("active") is False:
+    if not u.get("active", True):
         raise HTTPException(status_code=403, detail="Account is deactivated")
     token = create_token(u["id"])
     return {"access_token": token, "token_type": "bearer", "user": _user_to_out(u)}
@@ -154,7 +154,7 @@ async def google_exchange(body: GoogleExchangeIn):
 
     existing = await db.users.find_one({"email": email})
     if existing:
-        if existing.get("active") is False:
+        if not existing.get("active", True):
             raise HTTPException(status_code=403, detail="Account is deactivated")
         await db.users.update_one(
             {"id": existing["id"]},

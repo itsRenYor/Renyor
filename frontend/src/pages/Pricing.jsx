@@ -120,8 +120,8 @@ export default function Pricing({ inApp = false }) {
                 <span className="text-sm text-muted-foreground">/{cycle.slice(0, -2)}</span>
               </div>
               <ul className="mt-6 space-y-2.5">
-                {p.features.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
+                {p.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm">
                     <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                     <span>{f}</span>
                   </li>

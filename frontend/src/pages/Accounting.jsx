@@ -115,8 +115,8 @@ export default function Accounting() {
                 <div className="text-xs font-semibold tracking-widest uppercase text-muted-foreground mb-2">Operating Expenses</div>
                 {pl.expenses.length === 0 ? (
                   <div className="text-sm text-muted-foreground py-3">No expenses recorded.</div>
-                ) : pl.expenses.map((e, i) => (
-                  <StatRow key={i} label={e.category} value={formatINR(e.amount)} />
+                ) : pl.expenses.map((e) => (
+                  <StatRow key={e.category} label={e.category} value={formatINR(e.amount)} />
                 ))}
                 <StatRow label="Total Expenses" value={formatINR(pl.total_expenses)} bold />
                 <div className="mt-5">
@@ -183,8 +183,8 @@ export default function Accounting() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tb.accounts.map((a, i) => (
-                  <TableRow key={i} className="row-hover">
+                {tb.accounts.map((a) => (
+                  <TableRow key={a.account} className="row-hover">
                     <TableCell className="font-medium">{a.account}</TableCell>
                     <TableCell><Badge variant="secondary" className="capitalize text-xs">{a.type}</Badge></TableCell>
                     <TableCell className="text-right font-mono">{a.debit ? formatINR(a.debit) : "—"}</TableCell>

@@ -29,8 +29,8 @@ if "REACT_APP_BACKEND_URL" not in os.environ:
 BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/")
 API = f"{BASE_URL}/api"
 
-DEMO_EMAIL = "demo@aitax.in"
-DEMO_PASSWORD = "Demo@12345"
+DEMO_EMAIL = os.environ.get("DEMO_TEST_EMAIL", "demo@aitax.in")
+DEMO_PASSWORD = os.environ.get("DEMO_TEST_PASSWORD", "Demo@12345")
 
 
 # ---------- fixtures ----------

@@ -103,6 +103,7 @@ async def create_order(body: CreateOrderIn, user=Depends(get_current_user)):
     amount_inr = plan[body.billing_cycle]
     amount_paise = int(amount_inr * 100)
 
+    order = None
     try:
         order = rzp_client.order.create(
             {

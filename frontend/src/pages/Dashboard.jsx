@@ -120,7 +120,7 @@ export default function Dashboard() {
           {top.length > 0 ? (
             <div className="space-y-3">
               {top.map((t, i) => (
-                <div key={i} className="flex items-center justify-between text-sm" data-testid={`top-customer-${i}`}>
+                <div key={t.name} className="flex items-center justify-between text-sm" data-testid={`top-customer-${i}`}>
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold flex-shrink-0">
                       {t.name[0]}
